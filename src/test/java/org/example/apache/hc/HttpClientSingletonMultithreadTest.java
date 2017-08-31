@@ -79,81 +79,82 @@ public class HttpClientSingletonMultithreadTest {
 	
 	@Test
 	public void testMultithread() throws IOException, InterruptedException {
-        // create an array of URIs to perform GETs on
-        String[] urisToGet = {
-        		"http://localhost:" + PORT
-        		//"http://192.168.0.91:8080/spring_rest/getUserNoDBAction"
-        };
+		// create an array of URIs to perform GETs on
+		String[] urisToGet = { "http://localhost:" + PORT
+				// "http://192.168.0.91:8080/spring_rest/getUserNoDBAction"
+		};
 
-        int threadCount = 100;
-        GetThread[] threads = new GetThread[threadCount];
-        
-        // create a thread for each URI
-        for (int i = 0; i < threads.length; i++) {
-            HttpGet httpget = new HttpGet(urisToGet[i % urisToGet.length]);
-            threads[i] = new GetThread(HttpClientSingleton.getHttpClientInstance(), httpget, i + 1);
-        }
+		int threadCount = 100;
+		GetThread[] threads = new GetThread[threadCount];
 
-        // start the threads
-        for (int j = 0; j < threads.length; j++) {
-            threads[j].start();
-        }
+		// create a thread for each URI
+		for (int i = 0; i < threads.length; i++) {
+			HttpGet httpget = new HttpGet(urisToGet[i % urisToGet.length]);
+			threads[i] = new GetThread(HttpClientSingleton.getHttpClientInstance(), httpget, i + 1);
+		}
 
-        // join the threads
-        for (int j = 0; j < threads.length; j++) {
-            threads[j].join();
-        }	
+		// start the threads
+		for (int j = 0; j < threads.length; j++) {
+			threads[j].start();
+		}
+
+		// join the threads
+		for (int j = 0; j < threads.length; j++) {
+			threads[j].join();
+		}
 	}
-		
+
 	/**
 	 * A thread that performs a GET.
 	 */
 	public static class GetThread extends Thread {
 
-	    private final CloseableHttpClient httpClient;
-	    private final HttpContext context;
-	    private final HttpGet httpget;
-	    private final int id;
+		private final CloseableHttpClient httpClient;
+		private final HttpContext context;
+		private final HttpGet httpget;
+		private final int id;
 
-	    public GetThread(CloseableHttpClient httpClient, HttpGet httpget, int id) {
-	        this.httpClient = httpClient;
-	        this.context = new BasicHttpContext();
-	        this.httpget = httpget;
-	        this.id = id;
-	    }
+		public GetThread(CloseableHttpClient httpClient, HttpGet httpget, int id) {
+			this.httpClient = httpClient;
+			this.context = new BasicHttpContext();
+			this.httpget = httpget;
+			this.id = id;
+		}
 
-	    /**
-	     * Executes the GetMethod and prints some status information.
-	     */
-	    @Override
-	    public void run() {
-	    	String resp = "";
-	    	
-	        try {
-	            //System.out.println(id + " - about to get something from " + httpget.getURI());
-	            CloseableHttpResponse response = httpClient.execute(httpget, context);
-	            try {
-	                //System.out.println(id + " - get executed");
-	                // get the response body as an array of bytes
-	                HttpEntity entity = response.getEntity();
-	                if (entity != null) {
-	                	byte[] bytes = EntityUtils.toByteArray(entity);
-	                    //System.out.println(id + " - " + bytes.length + " bytes read");
-	                	resp = new String(bytes);
-	                }	            
-	            } finally {
-	                response.close();
-	            }
-	            
-	            Assert.assertEquals(true, DATA.equals(resp));
-	        } catch (Exception e) {
-	            System.out.println(id + " - error: " + e);
-	            Assert.assertEquals(true, 1 == 2);
-	        }
-	    }
+		/**
+		 * Executes the GetMethod and prints some status information.
+		 */
+		@Override
+		public void run() {
+			String resp = "";
 
-	}	
-	
+			try {
+				// System.out.println(id + " - about to get something from " +
+				// httpget.getURI());
+				CloseableHttpResponse response = httpClient.execute(httpget, context);
+				try {
+					// System.out.println(id + " - get executed");
+					// get the response body as an array of bytes
+					HttpEntity entity = response.getEntity();
+					if (entity != null) {
+						byte[] bytes = EntityUtils.toByteArray(entity);
+						// System.out.println(id + " - " + bytes.length + "
+						// bytes read");
+						resp = new String(bytes);
+					}
+				} finally {
+					response.close();
+				}
+
+				Assert.assertEquals(true, DATA.equals(resp));
+			} catch (Exception e) {
+				System.out.println(id + " - error: " + e);
+				Assert.assertEquals(true, 1 == 2);
+			}
+		}
+
+	}
+
     public static class LocalHttpSrv extends Thread {
     	HttpServer server;
     	int port;
@@ -177,132 +178,134 @@ public class HttpClientSingletonMultithreadTest {
     	}
     }
 	
-	static class HttpServer {  
-		EventLoopGroup bossGroup;  
-	    EventLoopGroup workerGroup;
-	     
-	    public HttpServer() {
-	        bossGroup = new NioEventLoopGroup(); // (1)  
-	        workerGroup = new NioEventLoopGroup();  	    	
-	    }
-	    
+	static class HttpServer {
+		EventLoopGroup bossGroup;
+		EventLoopGroup workerGroup;
+
+		public HttpServer() {
+			bossGroup = new NioEventLoopGroup(); // (1)
+			workerGroup = new NioEventLoopGroup();
+		}
+
 		public void shutdown() {
 			workerGroup.shutdownGracefully();
 			bossGroup.shutdownGracefully();
 		}
-	    public void start(int port) throws Exception {  
-	        try {  
-	            ServerBootstrap b = new ServerBootstrap(); // (2)  
-	            b.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class) // (3)  
-	                    .childHandler(new ChannelInitializer<SocketChannel>() { // (4)  
-	                                @Override  
-	                                public void initChannel(SocketChannel ch) throws Exception {  
-	                                    // server端发送的是httpResponse，所以要使用HttpResponseEncoder进行编码  
-	                                    ch.pipeline().addLast(new HttpResponseEncoder());  
-	                                    // server端接收到的是httpRequest，所以要使用HttpRequestDecoder进行解码  
-	                                    ch.pipeline().addLast(new HttpRequestDecoder());  
-	                                    ch.pipeline().addLast(new HttpServerInboundHandler());  
-	                                }  
-	                            }).option(ChannelOption.SO_BACKLOG, 128) // (5)  
-	                    .childOption(ChannelOption.SO_KEEPALIVE, true); // (6)  
-	  
-	            ChannelFuture f = b.bind(port).sync(); // (7)  
-	  
-	            f.channel().closeFuture().sync();  
-	        } finally {  
-	            workerGroup.shutdownGracefully();  
-	            bossGroup.shutdownGracefully();  
-	        }  
-	    }  
-	} 
+
+		public void start(int port) throws Exception {
+			try {
+				ServerBootstrap b = new ServerBootstrap(); // (2)
+				b.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class) // (3)
+						.childHandler(new ChannelInitializer<SocketChannel>() { // (4)
+							@Override
+							public void initChannel(SocketChannel ch) throws Exception {
+								// server端发送的是httpResponse，所以要使用HttpResponseEncoder进行编码
+								ch.pipeline().addLast(new HttpResponseEncoder());
+								// server端接收到的是httpRequest，所以要使用HttpRequestDecoder进行解码
+								ch.pipeline().addLast(new HttpRequestDecoder());
+								ch.pipeline().addLast(new HttpServerInboundHandler());
+							}
+						}).option(ChannelOption.SO_BACKLOG, 128) // (5)
+						.childOption(ChannelOption.SO_KEEPALIVE, true); // (6)
+
+				ChannelFuture f = b.bind(port).sync(); // (7)
+
+				f.channel().closeFuture().sync();
+			} finally {
+				workerGroup.shutdownGracefully();
+				bossGroup.shutdownGracefully();
+			}
+		}
+	}
 	
-	static class HttpServerInboundHandler extends ChannelInboundHandlerAdapter {  
-	    private static Logger   logger  = LoggerFactory.getLogger(HttpServerInboundHandler.class);  
-	    private ByteBufToBytes reader;  
-	  
-	    @Override  
-	    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {  
-	        if (msg instanceof HttpRequest) {  
-	        	
-	            HttpRequest request = (HttpRequest) msg;  
-	            //System.out.println("messageType:" + request.headers().get("messageType"));  
-	            //System.out.println("businessType:" + request.headers().get("businessType"));  
-	            if (HttpHeaders.isContentLengthSet(request)) {  
-	                reader = new ByteBufToBytes((int) HttpHeaders.getContentLength(request));  
-	            } 
-	             
-	        }  
-	  
-	        if (msg instanceof HttpContent) {  
-	            HttpContent httpContent = (HttpContent) msg;  
-	            ByteBuf content = httpContent.content(); 
-	            if (reader != null)
-	            	reader.reading(content);  
-	            content.release();  
-	            
-	            
-	            if (reader == null || reader.isEnd()) {
-	            	if (reader != null) {
-	                String resultStr = new String(reader.readFull());  
-	                System.out.println("Client said:" + resultStr);  
-	            	}
-	            	
-	                FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, OK, Unpooled.wrappedBuffer(DATA  
-	                        .getBytes()));  
-	                response.headers().set(CONTENT_TYPE, "text/plain");  
-	                response.headers().set(CONTENT_LENGTH, response.content().readableBytes());  
-	                response.headers().set(CONNECTION, Values.KEEP_ALIVE);  
-	                ctx.write(response);  
-	                ctx.flush();  
-	            }  
-	        }  
-	    }  
-	  
-	    @Override  
-	    public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {  
-	        logger.info("HttpServerInboundHandler.channelReadComplete");  
-	        ctx.flush();  
-	    }  
-	  
-	} 
+	static class HttpServerInboundHandler extends ChannelInboundHandlerAdapter {
+		private static Logger logger = LoggerFactory.getLogger(HttpServerInboundHandler.class);
+		private ByteBufToBytes reader;
+
+		@Override
+		public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+			if (msg instanceof HttpRequest) {
+
+				HttpRequest request = (HttpRequest) msg;
+				// System.out.println("messageType:" +
+				// request.headers().get("messageType"));
+				// System.out.println("businessType:" +
+				// request.headers().get("businessType"));
+				if (HttpHeaders.isContentLengthSet(request)) {
+					reader = new ByteBufToBytes((int) HttpHeaders.getContentLength(request));
+				}
+
+			}
+
+			if (msg instanceof HttpContent) {
+				HttpContent httpContent = (HttpContent) msg;
+				ByteBuf content = httpContent.content();
+				if (reader != null)
+					reader.reading(content);
+				content.release();
+
+				if (reader == null || reader.isEnd()) {
+					if (reader != null) {
+						String resultStr = new String(reader.readFull());
+						System.out.println("Client said:" + resultStr);
+					}
+
+					FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, OK,
+							Unpooled.wrappedBuffer(DATA.getBytes()));
+					response.headers().set(CONTENT_TYPE, "text/plain");
+					response.headers().set(CONTENT_LENGTH, response.content().readableBytes());
+					response.headers().set(CONNECTION, Values.KEEP_ALIVE);
+					ctx.write(response);
+					ctx.flush();
+				}
+			}
+		}
+
+		@Override
+		public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
+			logger.info("HttpServerInboundHandler.channelReadComplete");
+			ctx.flush();
+		}
+
+	}
 	
 	static class ByteBufToBytes {  
-	    private ByteBuf temp;  
-	  
-	    private boolean end = true;  
-	  
-	    public ByteBufToBytes(int length) {  
-	        temp = Unpooled.buffer(length);  
-	    }  
-	  
-	    public void reading(ByteBuf datas) {  
-	        datas.readBytes(temp, datas.readableBytes());  
-	        if (this.temp.writableBytes() != 0) {  
-	            end = false;  
-	        } else {  
-	            end = true;  
-	        }  
-	    }  
-	  
-	    public boolean isEnd() {  
-	        return end;  
-	    }  
-	  
-	    public byte[] readFull() {  
-	        if (end) {  
-	            byte[] contentByte = new byte[this.temp.readableBytes()];  
-	            this.temp.readBytes(contentByte);  
-	            this.temp.release();  
-	            return contentByte;  
-	        } else {  
-	            return null;  
-	        }  
-	    }  
-	  
-	    public byte[] read(ByteBuf datas) {  
-	        byte[] bytes = new byte[datas.readableBytes()];  
-	        datas.readBytes(bytes);  
-	        return bytes;  
-	    }  
+		private ByteBuf temp;
+
+		private boolean end = true;
+
+		public ByteBufToBytes(int length) {
+			temp = Unpooled.buffer(length);
+		}
+
+		public void reading(ByteBuf datas) {
+			datas.readBytes(temp, datas.readableBytes());
+			if (this.temp.writableBytes() != 0) {
+				end = false;
+			} else {
+				end = true;
+			}
+		}
+
+		public boolean isEnd() {
+			return end;
+		}
+
+		public byte[] readFull() {
+			if (end) {
+				byte[] contentByte = new byte[this.temp.readableBytes()];
+				this.temp.readBytes(contentByte);
+				this.temp.release();
+				return contentByte;
+			} else {
+				return null;
+			}
+		}
+
+		public byte[] read(ByteBuf datas) {
+			byte[] bytes = new byte[datas.readableBytes()];
+			datas.readBytes(bytes);
+			return bytes;
+		}
 	}  
 }
