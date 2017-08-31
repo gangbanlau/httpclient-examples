@@ -40,83 +40,84 @@ public class HttpClientUtilTest {
 	@Test
 	public void testHTTPGet() throws ClientProtocolException, IOException {		
 		CloseableHttpClient httpclient = HttpClientUtil.getHttpClient();
-		
-        try {
-            HttpGet httpget = new HttpGet("http://www.apache.org/");
 
-            logger.info("Executing request " + httpget.getRequestLine());
+		try {
+			HttpGet httpget = new HttpGet("http://www.apache.org/");
 
-            CloseableHttpResponse response = httpclient.execute(httpget);
-            try {
-                System.out.println("----------------------------------------");
-                System.out.println(response.getStatusLine());
+			logger.info("Executing request " + httpget.getRequestLine());
 
-                // Get hold of the response entity
-                HttpEntity entity = response.getEntity();
+			CloseableHttpResponse response = httpclient.execute(httpget);
+			try {
+				System.out.println("----------------------------------------");
+				System.out.println(response.getStatusLine());
 
-                // If the response does not enclose an entity, there is no need
-                // to bother about connection release
-                if (entity != null) {
-                    InputStream instream = entity.getContent();
-                    try {
-                        instream.read();
-                        // do something useful with the response
-                    } catch (IOException ex) {
-                        // In case of an IOException the connection will be released
-                        // back to the connection manager automatically
-                        throw ex;
-                    } finally {
-                        // Closing the input stream will trigger connection release
-                        instream.close();
-                    }
-                }
-            } finally {
-                response.close();
-            }            
-        } finally {
-        	try {
-        		httpclient.close();
-        	}
-        	catch (IOException e) {}
-        }		
-		
+				// Get hold of the response entity
+				HttpEntity entity = response.getEntity();
+
+				// If the response does not enclose an entity, there is no need
+				// to bother about connection release
+				if (entity != null) {
+					InputStream instream = entity.getContent();
+					try {
+						instream.read();
+						// do something useful with the response
+					} catch (IOException ex) {
+						// In case of an IOException the connection will be
+						// released
+						// back to the connection manager automatically
+						throw ex;
+					} finally {
+						// Closing the input stream will trigger connection
+						// release
+						instream.close();
+					}
+				}
+			} finally {
+				response.close();
+			}
+		} finally {
+			try {
+				httpclient.close();
+			} catch (IOException e) {
+			}
+		}
+
 	}
 	
 	@Test
 	public void testHTTPSGet() throws ClientProtocolException, IOException {		
 		CloseableHttpClient httpclient = HttpClientUtil.getHttpClient();
-		
-        try {
-            HttpGet httpget = new HttpGet("https://www.google.org/");
 
-            logger.info("Executing request " + httpget.getRequestLine());
+		try {
+			HttpGet httpget = new HttpGet("https://www.google.org/");
 
-            // Create a custom response handler
-            ResponseHandler<String> responseHandler = new ResponseHandler<String>() {
+			logger.info("Executing request " + httpget.getRequestLine());
+
+			// Create a custom response handler
+			ResponseHandler<String> responseHandler = new ResponseHandler<String>() {
 
 				@Override
-				public String handleResponse(HttpResponse response)
-						throws ClientProtocolException, IOException {
-	                int status = response.getStatusLine().getStatusCode();
-                    if (status >= 200 && status < 300) {
-                        HttpEntity entity = response.getEntity();
-                        return entity != null ? EntityUtils.toString(entity) : null;
-                    } else {
-                        throw new ClientProtocolException("Unexpected response status: " + status);
-                    }				
-                }
+				public String handleResponse(HttpResponse response) throws ClientProtocolException, IOException {
+					int status = response.getStatusLine().getStatusCode();
+					if (status >= 200 && status < 300) {
+						HttpEntity entity = response.getEntity();
+						return entity != null ? EntityUtils.toString(entity) : null;
+					} else {
+						throw new ClientProtocolException("Unexpected response status: " + status);
+					}
+				}
 
-            };
-            String responseBody = httpclient.execute(httpget, responseHandler);
-            //logger.info("----------------------------------------");
-            //logger.info(responseBody);
-            // TODO ASSERT something
-        } finally {
-        	try {
-        		httpclient.close();		// release resources
-        	}
-        	catch (IOException e) {}
-        }		
-		
+			};
+			String responseBody = httpclient.execute(httpget, responseHandler);
+			// logger.info("----------------------------------------");
+			// logger.info(responseBody);
+			// TODO ASSERT something
+		} finally {
+			try {
+				httpclient.close(); // release resources
+			} catch (IOException e) {
+			}
+		}
+
 	}
 }
