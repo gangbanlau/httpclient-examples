@@ -28,6 +28,9 @@ import org.slf4j.LoggerFactory;
 class HttpClientUtil {
 	private static final Logger logger = LoggerFactory.getLogger(HttpClientUtil.class);
 	
+	public static final int CONN_MAX_TOTAL = 256;
+	public static final int CONN_MAX_PER_ROUTE = 200;
+	
 	private static SSLConnectionSocketFactory createCustomSSLCSFactory(
 			String customeKeyStoreResource, String password, String[] supportedProtocols)
 			throws KeyStoreException, NoSuchAlgorithmException,
@@ -78,29 +81,28 @@ class HttpClientUtil {
 		logger.info("Execute getHttpClientCustomKeyStore ");
 
 		// 设置超时
-		RequestConfig config = RequestConfig.custom().setConnectTimeout(3000)
-				.setSocketTimeout(30000).build();
+		RequestConfig config = RequestConfig.custom().setConnectTimeout(3000).setSocketTimeout(30000).build();
 
 		SSLConnectionSocketFactory sslsf = null;
 
 		try {
 			sslsf = createCustomSSLCSFactory(keyStoreResource, password, supportedProtocols);
-		} catch (KeyManagementException | KeyStoreException
-				| NoSuchAlgorithmException | CertificateException | IOException e) {
+		} catch (KeyManagementException | KeyStoreException | NoSuchAlgorithmException | CertificateException
+				| IOException e) {
 			// 通常情况下不会出现这个错误
 			logger.warn("createCustomSSLCSFactory", e);
 			return null;
 		}
 
 		PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
-		
-	    // Configure total max or per route limits for persistent connections
-        // that can be kept in the pool or leased by the connection manager.
-        cm.setMaxTotal(400);
-        cm.setDefaultMaxPerRoute(400);
-        
-		return HttpClients.custom().setSSLSocketFactory(sslsf).setConnectionManager(cm)
-				.setDefaultRequestConfig(config).build();
+
+		// Configure total max or per route limits for persistent connections
+		// that can be kept in the pool or leased by the connection manager.
+		cm.setMaxTotal(CONN_MAX_TOTAL);
+		cm.setDefaultMaxPerRoute(CONN_MAX_PER_ROUTE);
+
+		return HttpClients.custom().setSSLSocketFactory(sslsf).setConnectionManager(cm).setDefaultRequestConfig(config)
+				.build();
 	}
 
 	/**
