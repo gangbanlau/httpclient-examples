@@ -28,14 +28,6 @@ public class HttpClientUtilTest {
 		
 		httpClient.close();
 	}
-
-/*	@Test
-	public void testGetHttpClientCustomKeyStore() {
-		logger.info("Execute testGetHttpClientCustomKeyStore");
-		CloseableHttpClient httpClient = HttpClientUtil.getHttpClientCustomKeyStore(UnionPayConstants.KEYSTORE, UnionPayConstants.KEYSTORE_PASSWORD);
-		Assert.assertNotNull(httpClient);
-		Assert.assertEquals(true, httpClient instanceof CloseableHttpClient);		
-	}*/
 	
 	@Test
 	public void testHTTPGet() throws ClientProtocolException, IOException {		
