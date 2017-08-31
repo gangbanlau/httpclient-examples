@@ -82,40 +82,38 @@ public class AsyncHttpClientTest {
 	public void testPost() throws InterruptedException, IOException {
 		AsyncHttpClient client = new DefaultAsyncHttpClient();
 		CountDownLatch latch = new CountDownLatch(1);
-        
-        Map<String, List<String>> m = new HashMap<>();
-        for (int i = 0; i < 5; i++) {
-            m.put("param_" + i, Arrays.asList("值_" + i));
-        }
 
-		Request req = new RequestBuilder("POST")
-				.setUrl(TARGET_URL)
-				.addHeader("Content-Type", "application/x-www-form-urlencoded")
-				.setFormParams(m)		
-				.build();
-		
-		// (this will also fully read Response in memory before calling onCompleted)
-		client.executeRequest(req, new AsyncCompletionHandler<Response>(){
-		    
-		    @Override
-		    public Response onCompleted(Response response) throws Exception{
-		        // Do something with the Response
-		        logger.info("onComplete: " + response.getStatusCode() + " " + response.getStatusText());
-		        latch.countDown();
-		        return response;
-		    }
-		    
-		    @Override
-		    public void onThrowable(Throwable t){
-		        // Something wrong happened.
-		    	logger.warn("", t);
-		    	latch.countDown();
-		    }
-		});	
-		
+		Map<String, List<String>> m = new HashMap<>();
+		for (int i = 0; i < 5; i++) {
+			m.put("param_" + i, Arrays.asList("值_" + i));
+		}
+
+		Request req = new RequestBuilder("POST").setUrl(TARGET_URL)
+				.addHeader("Content-Type", "application/x-www-form-urlencoded").setFormParams(m).build();
+
+		// (this will also fully read Response in memory before calling
+		// onCompleted)
+		client.executeRequest(req, new AsyncCompletionHandler<Response>() {
+
+			@Override
+			public Response onCompleted(Response response) throws Exception {
+				// Do something with the Response
+				logger.info("onComplete: " + response.getStatusCode() + " " + response.getStatusText());
+				latch.countDown();
+				return response;
+			}
+
+			@Override
+			public void onThrowable(Throwable t) {
+				// Something wrong happened.
+				logger.warn("", t);
+				latch.countDown();
+			}
+		});
+
 		latch.await();
-		
-		client.close();		
+
+		client.close();
 	}
 	
 	
