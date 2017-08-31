@@ -66,29 +66,27 @@ public class HttpClientSingletonDemoTest {
 	@Test
 	public void testConnectionReuseConcurrent() throws Exception {
 		logger.info("##### testConnectionReuseConcurrent #####");
-        // create an array of URIs to perform GETs on
-        String[] urisToGet = {
-        		"http://localhost:" + PORT        		
-        };
+		// create an array of URIs to perform GETs on
+		String[] urisToGet = { "http://localhost:" + PORT };
 
-        int threadCount = 10;
-        GetThread[] threads = new GetThread[threadCount];
-        
-        // create a thread for each URI
-        for (int i = 0; i < threads.length; i++) {
-            HttpGet httpget = new HttpGet(urisToGet[i % urisToGet.length]);
-            threads[i] = new GetThread(HttpClientSingleton.getHttpClientInstance(), httpget, i + 1);
-        }
+		int threadCount = 10;
+		GetThread[] threads = new GetThread[threadCount];
 
-        // start the threads
-        for (int j = 0; j < threads.length; j++) {
-            threads[j].start();
-        }
+		// create a thread for each URI
+		for (int i = 0; i < threads.length; i++) {
+			HttpGet httpget = new HttpGet(urisToGet[i % urisToGet.length]);
+			threads[i] = new GetThread(HttpClientSingleton.getHttpClientInstance(), httpget, i + 1);
+		}
 
-        // join the threads
-        for (int j = 0; j < threads.length; j++) {
-            threads[j].join();
-        }		
+		// start the threads
+		for (int j = 0; j < threads.length; j++) {
+			threads[j].start();
+		}
+
+		// join the threads
+		for (int j = 0; j < threads.length; j++) {
+			threads[j].join();
+		}
 		logger.info("##### testConnectionReuseConcurrent end #####");
 	}
 	
@@ -100,37 +98,40 @@ public class HttpClientSingletonDemoTest {
 	 */
 	public static void demo(HttpGet httpget) throws Exception {
 		try {
-        logger.debug("Executing request " + httpget.getRequestLine());
-        CloseableHttpResponse response = HttpClientSingleton.getHttpClientInstance().execute(httpget);
-        try {
-            logger.debug("----------------------------------------");
-            //System.out.println(response.getStatusLine());
+			logger.debug("Executing request " + httpget.getRequestLine());
+			CloseableHttpResponse response = HttpClientSingleton.getHttpClientInstance().execute(httpget);
+			try {
+				logger.debug("----------------------------------------");
+				// System.out.println(response.getStatusLine());
 
-            // Get hold of the response entity
-            HttpEntity entity = response.getEntity();
+				// Get hold of the response entity
+				HttpEntity entity = response.getEntity();
 
-            // If the response does not enclose an entity, there is no need
-            // to bother about connection release
-            if (entity != null) {
-                InputStream instream = entity.getContent();
-                try {
-                    instream.read();
-                    // do something useful with the response
-                } catch (IOException ex) {
-                    // In case of an IOException the connection will be released
-                    // back to the connection manager automatically
-                	logger.warn("",ex);
-                    throw ex;
-                } finally {
-                    // Closing the input stream will trigger connection release
-                    instream.close();	// !!! 注意此处 close
-                }
-            }
-        } finally {
-            response.close();			// !!! 注意此处 close
-        }
+				// If the response does not enclose an entity, there is no need
+				// to bother about connection release
+				if (entity != null) {
+					InputStream instream = entity.getContent();
+					try {
+						instream.read();
+						// do something useful with the response
+					} catch (IOException ex) {
+						// In case of an IOException the connection will be
+						// released
+						// back to the connection manager automatically
+						logger.warn("", ex);
+						throw ex;
+					} finally {
+						// Closing the input stream will trigger connection
+						// release
+						instream.close(); // !!! 注意此处 close
+					}
+				}
+			} finally {
+				response.close(); // !!! 注意此处 close
+			}
 		} finally {
-			// httpClient.close();	// 因为我们需要重用 HttpClient instance，因此此处不能调用 close
-        }		
+			// httpClient.close(); // 因为我们需要重用 HttpClient instance，因此此处不能调用
+			// close
+		}
 	}
 }
