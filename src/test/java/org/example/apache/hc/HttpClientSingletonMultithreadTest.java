@@ -155,28 +155,28 @@ public class HttpClientSingletonMultithreadTest {
 
 	}
 
-    public static class LocalHttpSrv extends Thread {
-    	HttpServer server;
-    	int port;
-    	
-    	LocalHttpSrv(int port) {
-    		server = new HttpServer();
-    		this.port = port;
-    	}
-    	
-    	public void run () {
-    		try {
+	public static class LocalHttpSrv extends Thread {
+		HttpServer server;
+		int port;
+
+		LocalHttpSrv(int port) {
+			server = new HttpServer();
+			this.port = port;
+		}
+
+		public void run() {
+			try {
 				server.start(this.port);
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-    	}
-    	
-    	public void close() {
-    		server.shutdown();
-    	}
-    }
+		}
+
+		public void close() {
+			server.shutdown();
+		}
+	}
 	
 	static class HttpServer {
 		EventLoopGroup bossGroup;
