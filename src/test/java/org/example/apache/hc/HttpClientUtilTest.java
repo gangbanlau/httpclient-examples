@@ -77,10 +77,10 @@ public class HttpClientUtilTest {
 	}
 	
 	@Test
-	public void testHTTPSGet() throws ClientProtocolException, IOException {		
-		CloseableHttpClient httpclient = HttpClientUtil.getHttpClient();
-
-		try {
+	public void testHTTPSGet() throws ClientProtocolException, IOException {
+		// JDK 7 try-with-resources statement
+		try (CloseableHttpClient httpclient = HttpClientUtil.getHttpClient()) {
+			
 			HttpGet httpget = new HttpGet("https://www.google.org/");
 
 			logger.info("Executing request " + httpget.getRequestLine());
@@ -104,12 +104,6 @@ public class HttpClientUtilTest {
 			// logger.info("----------------------------------------");
 			// logger.info(responseBody);
 			// TODO ASSERT something
-		} finally {
-			try {
-				httpclient.close(); // release resources
-			} catch (IOException e) {
-			}
 		}
-
 	}
 }

@@ -21,7 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 每次获取都是得到一个新的实例，因此使用完需要用 finally { close }
+ * 每次获取都是得到一个新的实例，因此使用完需要用 finally { close } 或者利用 JDK 7 try-with-resources statement
  * @author gang
  *
  */
